@@ -12,6 +12,7 @@ python3 demo.py [--cpu] [--nonsplit] [--i]
 ```
 
 Options:
+
 `--cpu` Run model on local machine instead of FPGA.
 
 `--nonsplit` Run the non-split version of the model.
