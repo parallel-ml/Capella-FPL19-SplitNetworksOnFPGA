@@ -2,6 +2,8 @@
 
 Implementation of a split, distributed CNN (ResNet V1 18), deployed to 2 [PYNQ FPGA boards](https://pynq.io) using [TVM/VTA](https://tvm.ai).
 
+Github repo is available [here](https://github.com/parallel-ml/Capella-FPL19-SplitNetworksOnFPGA).
+
 ## Motivation
 
 Implementation of deep neural networks (DNNs) are hard to achieve on edge devices because DNNs
