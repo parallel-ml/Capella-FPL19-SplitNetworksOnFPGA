@@ -74,7 +74,7 @@ now ready to deploy the split networks. `demo.py` is a minimal example that show
 First, install additional Python dependencies:
 
 ```
-pip3 install --user numpy decorator attrs
+pip3 install --user mxnet pillow
 ```
 
 Then run the demo:
