@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 
 import mxnet as mx
 from mxnet import gluon, nd
+from mxnet.gluon.model_zoo import vision
 
 class ResNetSplitBlock(gluon.HybridBlock):
     '''
@@ -14,11 +15,11 @@ class ResNetSplitBlock(gluon.HybridBlock):
 
         self.body = gluon.nn.HybridSequential(prefix='SplitBlock_')
         self.body.add(gluon.nn.Conv2D(channels=channels, kernel_size=(3, 3), strides=stride, padding=1,
-                in_channels=in_channels, use_bias=False, weight_initializer=mx.init.Xavier()))
+                in_channels=in_channels, use_bias=False))
         self.body.add(gluon.nn.BatchNorm())
         self.body.add(gluon.nn.Activation('relu'))
         self.body.add(gluon.nn.Conv2D(channels=channels, kernel_size=(3, 3), strides=1, padding=1,
-                in_channels=in_channels, use_bias=False, weight_initializer=mx.init.Xavier()))
+                in_channels=in_channels, use_bias=False))
         self.body.add(gluon.nn.BatchNorm())
 
         if downsample:
@@ -52,7 +53,7 @@ def resnet18_v1_split():
     net.add(body)
 
     body.add(gluon.nn.Conv2D(channels=32, kernel_size=(7, 7), strides=2, padding=3,
-            use_bias=False, weight_initializer=mx.init.Xavier()))
+            use_bias=False))
     body.add(gluon.nn.BatchNorm())
     body.add(gluon.nn.Activation('relu'))
     body.add(gluon.nn.MaxPool2D(pool_size=3, strides=2, padding=1))
@@ -79,9 +80,24 @@ def resnet18_v1_split():
 
     body.add(gluon.nn.GlobalAvgPool2D())
 
-    # feed forward once, initialize with
-    # random weights (for now)
-    net.initialize()
-    dummy = nd.random_normal(shape=(1, 3, 224, 224))
-    output = net(dummy)
     return net
+
+class SplitResNet(gluon.HybridBlock):
+    def __init__(self, output_size, **kwargs):
+        super(SplitResNet, self).__init__(**kwargs)
+        with self.name_scope():
+            self.conv1 = resnet18_v1_split()
+            self.conv2 = resnet18_v1_split()
+            self.dense = gluon.nn.Dense(output_size)
+
+    def hybrid_forward(self, F, data):
+        conv1_out = F.relu(self.conv1(data))
+        conv2_out = F.relu(self.conv2(data))
+        concat = F.concat(conv1_out, conv2_out, dim=1)
+        return self.dense(concat)
+
+    def save_parameters_split(self, chkpt):
+        self.conv1.save_parameters(f'conv1-{chkpt}.params')
+        self.conv2.save_parameters(f'conv2-{chkpt}.params')
+        self.dense.save_parameters(f'dense-{chkpt}.params')
+
