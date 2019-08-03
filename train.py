@@ -71,79 +71,79 @@ val_data = mx.io.ImageRecordIter(
     std_b               = std_rgb[2],
 )
 
-# Learning rate decay factor
-# lr_decay = 0.1
-# # Epochs where learning rate decays
-# lr_decay_epoch = [30, 60, 90, np.inf]
+Learning rate decay factor
+lr_decay = 0.1
+# Epochs where learning rate decays
+lr_decay_epoch = [30, 60, 90, np.inf]
 
-# # Nesterov accelerated gradient descent
-# optimizer = 'nag'
-# # Set parameters
-# optimizer_params = {'learning_rate': 0.1, 'wd': 0.0001, 'momentum': 0.9}
+# Nesterov accelerated gradient descent
+optimizer = 'nag'
+# Set parameters
+optimizer_params = {'learning_rate': 0.1, 'wd': 0.0001, 'momentum': 0.9}
 
-# # Define our trainer for net
-# trainer = gluon.Trainer(net.collect_params(), optimizer, optimizer_params)
+# Define our trainer for net
+trainer = gluon.Trainer(net.collect_params(), optimizer, optimizer_params)
 
-# loss_fn = gluon.loss.SoftmaxCrossEntropyLoss()
+loss_fn = gluon.loss.SoftmaxCrossEntropyLoss()
 
-# acc_top1 = mx.metric.Accuracy()
-# acc_top5 = mx.metric.TopKAccuracy(5)
-# train_history = TrainingHistory(['training-top1-err', 'training-top5-err',
-#                                  'validation-top1-err', 'validation-top5-err'])
+acc_top1 = mx.metric.Accuracy()
+acc_top5 = mx.metric.TopKAccuracy(5)
+train_history = TrainingHistory(['training-top1-err', 'training-top5-err',
+                                 'validation-top1-err', 'validation-top5-err'])
 
-# def test(ctx, val_data):
-#     acc_top1_val = mx.metric.Accuracy()
-#     acc_top5_val = mx.metric.TopKAccuracy(5)
-#     for i, batch in enumerate(val_data):
-#         data = gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
-#         label = gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
-#         outputs = [net(X) for X in data]
-#         acc_top1_val.update(label, outputs)
-#         acc_top5_val.update(label, outputs)
+def test(ctx, val_data):
+    acc_top1_val = mx.metric.Accuracy()
+    acc_top5_val = mx.metric.TopKAccuracy(5)
+    for i, batch in enumerate(val_data):
+        data = gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
+        label = gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
+        outputs = [net(X) for X in data]
+        acc_top1_val.update(label, outputs)
+        acc_top5_val.update(label, outputs)
 
-#     _, top1 = acc_top1_val.get()
-#     _, top5 = acc_top5_val.get()
-#     return (1 - top1, 1 - top5)
+    _, top1 = acc_top1_val.get()
+    _, top5 = acc_top5_val.get()
+    return (1 - top1, 1 - top5)
 
-# epochs = 120
-# lr_decay_count = 0
-# log_interval = 50
+epochs = 120
+lr_decay_count = 0
+log_interval = 50
 
-# for epoch in range(epochs):
-#     tic = time.time()
-#     btic = time.time()
-#     acc_top1.reset()
-#     acc_top5.reset()
+for epoch in range(epochs):
+    tic = time.time()
+    btic = time.time()
+    acc_top1.reset()
+    acc_top5.reset()
 
-#     if lr_decay_period == 0 and epoch == lr_decay_epoch[lr_decay_count]:
-#         trainer.set_learning_rate(trainer.learning_rate*lr_decay)
-#         lr_decay_count += 1
+    if lr_decay_period == 0 and epoch == lr_decay_epoch[lr_decay_count]:
+        trainer.set_learning_rate(trainer.learning_rate*lr_decay)
+        lr_decay_count += 1
 
-#     for i, batch in enumerate(train_data):
-#         data = gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
-#         label = gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
-#         with ag.record():
-#             outputs = [net(X) for X in data]
-#             loss = [L(yhat, y) for yhat, y in zip(outputs, label)]
-#         ag.backward(loss)
-#         trainer.step(batch_size)
-#         acc_top1.update(label, outputs)
-#         acc_top5.update(label, outputs)
-#         if log_interval and not (i + 1) % log_interval:
-#             _, top1 = acc_top1.get()
-#             _, top5 = acc_top5.get()
-#             err_top1, err_top5 = (1-top1, 1-top5)
-#             print('Epoch[%d] Batch [%d]     Speed: %f samples/sec   top1-err=%f     top5-err=%f'%(
-#                       epoch, i, batch_size*opt.log_interval/(time.time()-btic), err_top1, err_top5))
-#             btic = time.time()
+    for i, batch in enumerate(train_data):
+        data = gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
+        label = gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
+        with ag.record():
+            outputs = [net(X) for X in data]
+            loss = [L(yhat, y) for yhat, y in zip(outputs, label)]
+        ag.backward(loss)
+        trainer.step(batch_size)
+        acc_top1.update(label, outputs)
+        acc_top5.update(label, outputs)
+        if log_interval and not (i + 1) % log_interval:
+            _, top1 = acc_top1.get()
+            _, top5 = acc_top5.get()
+            err_top1, err_top5 = (1-top1, 1-top5)
+            print('Epoch[%d] Batch [%d]     Speed: %f samples/sec   top1-err=%f     top5-err=%f'%(
+                      epoch, i, batch_size*opt.log_interval/(time.time()-btic), err_top1, err_top5))
+            btic = time.time()
 
-#     _, top1 = acc_top1.get()
-#     _, top5 = acc_top5.get()
-#     err_top1, err_top5 = (1-top1, 1-top5)
+    _, top1 = acc_top1.get()
+    _, top5 = acc_top5.get()
+    err_top1, err_top5 = (1-top1, 1-top5)
 
-#     err_top1_val, err_top5_val = test(ctx, val_data)
-#     train_history.update([err_top1, err_top5, err_top1_val, err_top5_val])
+    err_top1_val, err_top5_val = test(ctx, val_data)
+    train_history.update([err_top1, err_top5, err_top1_val, err_top5_val])
 
-#     print('[Epoch %d] training: err-top1=%f err-top5=%f'%(epoch, err_top1, err_top5))
-#     print('[Epoch %d] time cost: %f'%(epoch, time.time()-tic))
-#     print('[Epoch %d] validation: err-top1=%f err-top5=%f'%(epoch, err_top1_val, err_top5_val))
+    print('[Epoch %d] training: err-top1=%f err-top5=%f'%(epoch, err_top1, err_top5))
+    print('[Epoch %d] time cost: %f'%(epoch, time.time()-tic))
+    print('[Epoch %d] validation: err-top1=%f err-top5=%f'%(epoch, err_top1_val, err_top5_val))
