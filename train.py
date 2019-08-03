@@ -56,7 +56,7 @@ train_data = mx.io.ImageRecordIter(
 
 val_data = mx.io.ImageRecordIter(
     path_imgrec         = '/data/youn/datasets/imagenet/rec/val.rec',
-    path_imgidx         = '/data/youn/datasets/imagenet/rec/val.rec',
+    path_imgidx         = '/data/youn/datasets/imagenet/rec/val.idx',
     preprocess_threads  = 32,
     shuffle             = False,
     batch_size          = 256,
