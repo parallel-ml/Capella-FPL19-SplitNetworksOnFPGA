@@ -1,3 +1,8 @@
+"""
+Code to autotune splitnet.resnet18_v1_split using the TVM autotuning tool.
+
+Breaks right now, but maybe someday it will work.
+"""
 import os
 from mxnet.gluon.model_zoo import vision
 import numpy as np
@@ -18,18 +23,9 @@ import splitnet
 
 model = "resnet18_v1"
 
-"""
-Code to autotune a split network using the TVM autotuning tool.
-
-Maybe someday it will work.
-"""
-
 # Tracker host and port can be set by your environment
 tracker_host = os.environ.get("TVM_TRACKER_HOST", '0.0.0.0')
 tracker_port = int(os.environ.get("TVM_TRACKER_PORT", 9190))
-
-device_host = os.environ.get("VTA_PYNQ_RPC_HOST", "192.168.2.99")
-device_port = int(os.environ.get("VTA_PYNQ_RPC_PORT", "9091"))
 
 # Make sure that TVM was compiled with RPC=1
 assert tvm.module.enabled('rpc')
@@ -47,7 +43,7 @@ target = env.target if device == "vta" else env.target_vta_cpu
 # The ``start_pack`` and ``stop_pack`` labels indicate where
 # to start and end the graph packing relay pass: in other words
 # where to start and finish offloading to VTA.
-network = "resnet18_v1"
+network = "resnet18_v1_split"
 start_pack="nn.max_pool2d"
 stop_pack="nn.global_avg_pool2d"
 
@@ -186,7 +182,6 @@ def register_vta_tuning_tasks():
 def tune_and_evaluate(tuning_opt):
 
     if env.TARGET != "sim":
-        # remote = rpc.connect(device_host, device_port)
         # Get remote from fleet node
         remote = autotvm.measure.request_remote(env.TARGET, tracker_host, tracker_port, timeout=10000)
         # Reconfigure the JIT runtime and FPGA.
