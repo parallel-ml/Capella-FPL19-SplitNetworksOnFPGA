@@ -38,7 +38,7 @@ class ResNetSplitBlock(gluon.HybridBlock):
 
         return x
 
-def resnet18_v1_split():
+def resnet18_v1_split(i=None):
     '''
     Exactly the same architecture as
     mxnet.gluon.model_zoo.vision.resnet18_v1,
@@ -79,9 +79,11 @@ def resnet18_v1_split():
 
     body.add(gluon.nn.GlobalAvgPool2D())
 
+    if i is None:
+        net.initialize()
+    else:
+        net.load_parameters(f'params/conv{i}-1.params', ctx=mx.cpu())
     # feed forward once, initialize with
-    # random weights (for now)
-    net.initialize()
     dummy = nd.random_normal(shape=(1, 3, 224, 224))
     output = net(dummy)
     return net

@@ -60,7 +60,7 @@ class WorkerThread(threading.Thread):
             dtype_dict = {'data': 'float32'}
             shape_dict = {'data': (env.BATCH, 3, 224, 224)}
 
-            gluon_model = vision.resnet18_v1(pretrained=True, ctx=ctx).features if args.nonsplit else splitnet.resnet18_v1_split()
+            gluon_model = vision.resnet18_v1(pretrained=True, ctx=ctx).features if args.nonsplit else splitnet.resnet18_v1_split(self.id+1)
 
             # Measure build start time
             build_start = time.time()
@@ -186,7 +186,9 @@ args = parser.parse_args()
 
 # get dense layer, categories for imagenet
 ctx = mx.cpu()
-dense = vision.resnet18_v1(pretrained=True, ctx=ctx).output
+dense = gluon.nn.Dense(1000)
+dense.load_parameters('params/dense-1.params', ctx=ctx)
+
 mx.test_utils.download('https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/doc/tutorials/onnx/image_net_labels.json')
 categories = np.array(json.load(open('image_net_labels.json', 'r')))
 
