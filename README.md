@@ -1,3 +1,5 @@
+__Demo Website:__ [http://comparch.gatech.edu/hparch/fpl19/](http://comparch.gatech.edu/hparch/fpl19/)
+
 # FPL19 Split Networks on FPGA
 
 Implementation of a split, distributed CNN (ResNet V1 18), deployed to 2 [PYNQ FPGA boards](https://pynq.io) using [TVM/VTA](https://tvm.ai).
